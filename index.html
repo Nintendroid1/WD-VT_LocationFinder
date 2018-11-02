@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css"
+          integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+
+</head>
+<body>
+
+    <section class="jumbotron bg-dark text-white mb-0">
+        <div class="container">
+            <h2>US Location info</h2>
+            <h4 class="text-muted">Enter a zipcode to get location info</h4>
+            <form class="mt-4" id="zipForm">
+                <div class="input-group input-group-lg">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class = "fas fa-map-pin"></i>
+                        </span>
+                    </div>
+                    <input type="text" class="form-control" id="zip" placeholder="Enter zipcode">
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="container">
+        <div id="output">
+
+        </div>
+    </div>
+<script>
+    document.querySelector('#zipForm').addEventListener('submit', getLocationInfo);
+
+    function getLocationInfo(e) {
+        e.preventDefault();
+        const zip = document.querySelector("#zip").value;
+
+        //Make a request (use template string with variables)
+        fetch(`http://api.zippopotam.us/us/${zip}`)
+            .then(function(response) {
+                console.log(response);
+                if(response.status != 200) {
+                    document.querySelector('#output').innerHTML =
+                        `<div class="alert alert-danger mt-4">Invalid zipcode, Please try again!</div>`;
+                    throw Error(response.statusText);
+                } else {
+                    console.log(response);
+                    return response.json();
+                }
+            })
+            .then(data => {
+                let output='';
+                data.places.forEach(place=> {
+                    output += `
+                    <div class="card border border-success mt-4">
+                        <div class="card-header">
+                            <strong>Location Info</strong>
+                            <button type="button" class="close" aria-label="Close" onclick="deleteLocation()">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                               <li class="list-group-item"><strong>City:</strong> ${place['place name']}</li>
+                               <li class="list-group-item"><strong>State:</strong> ${place['state']}</li>
+                               <li class="list-group-item"><strong>Longitude:</strong> ${place['longitude']}</li>
+                               <li class="list-group-item"><strong>Latitude:</strong> ${place['latitude']}</li>
+
+                            </ul>
+                        </div>
+                    </div>
+                    `;
+
+                });
+                //Insert info into output div
+                document.querySelector('#output').innerHTML = output;
+            })
+            .catch(err => console.log(err));
+    }
+
+    function deleteLocation() {
+        document.querySelector('.card').remove();
+        document.querySelector('#zip').value = '';
+    }
+</script>
+</body>
+</html>
